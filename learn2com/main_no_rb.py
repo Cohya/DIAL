@@ -9,16 +9,16 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 
-from nn_models.games.ColorDigitGuessEnv import ColorDigitGuessEnv
-from nn_models.learn2com.agents.lean_to_com_agent import Agent
-from nn_models.learn2com.methods.ddqn import DDQN
-from nn_models.learn2com.nn_networks.C_Net import C_Net
-from nn_models.learn2com.utils.discretise_regularise_unit import (
+from games.ColorDigitGuessEnv import ColorDigitGuessEnv
+from learn2com.agents.lean_to_com_agent import Agent
+from learn2com.methods.ddqn import DDQN
+from learn2com.nn_networks.C_Net import C_Net
+from learn2com.utils.discretise_regularise_unit import (
     get_discretise_regularise_unit,
 )
-from nn_models.learn2com.utils.general import get_learn2com_config
-from nn_models.learn2com.utils.priorized_replay_buffer import PrioritizedReplayBuffer
-from nn_models.learn2com.utils.run_episode import play_one_game
+from learn2com.utils.general import get_learn2com_config
+from learn2com.utils.priorized_replay_buffer import PrioritizedReplayBuffer
+from learn2com.utils.run_episode import play_one_game
 from utils.helpers import smooth_signal
 
 
