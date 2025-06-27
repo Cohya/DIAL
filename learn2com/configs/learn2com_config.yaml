@@ -1,0 +1,27 @@
+
+espilone: 0.05 # Epsilon for epsilon-greedy exploration
+discount_factor: 1.00 # Discount factor for future rewards 
+
+taget_update_interval: 100 # How often to update the target network
+
+parallel_episode_batch_size: 2 # Size of the batch for training
+
+optimizer: # Optimizer configuration
+  type: RmspProp # Type of optimizer
+  learning_rate: 0.0005 # Learning rate for the optimizer
+  momentum: 0.95 # Momentum for the optimizer
+
+
+discretise_regularise_unit:
+  type: Normal # Discretise Regularise Unit 
+  sigma: 0.5 # Sigma value for the DRU
+  
+network_parameters:
+  embedding_dim: 128
+
+replay_buffer_params:
+  type: PrioritizedReplayBuffer # Type of replay buffer
+  capacity: 10000 # Capacity of the replay buffer
+  alpha: 0.6 # Alpha value for prioritized replay buffer
+  beta_start: 0.4 # Beta start value for prioritized replay buffer
+  beta_frames: 100000 # Beta frames value for prioritized replay buffer
