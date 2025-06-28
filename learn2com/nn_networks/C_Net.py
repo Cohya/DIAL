@@ -18,6 +18,7 @@ class Reciver(nn.Module):
         m = self.batch_norm(messeage)  # Normalize the input message
         # m = self.layer_norm(messeage)  # Apply layer normalization
         x = self.fc1(m)
+        # x = F.relu(x)
         
         return x
 

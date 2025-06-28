@@ -262,10 +262,11 @@ def dial_episode(i, batch_size = 1):
         h2_1_t_minus_1 = step_t_minus_1["h2_1"]
         h2_2_t_minus_1 = step_t_minus_1["h2_2"]
 
-
+        
         _,message_1, _,_,_ = cnet(obs1_t_minus_1, msg_2_t_minus_1,a1_t_minus_1, agent_id_1, h1_1_t_minus_1, h1_2_t_minus_1)
         message_1_dru = discretise_regularise_unit(message_1, scale=0.1, training=True)
-        
+        # param_names = [name for name, _ in cnet.named_parameters()]
+
         aggregate_theta_grad_wrt_message = [torch.zeros_like(param) for param in cnet.parameters()]
         for jhg in range(batch_size):
             derivative_wrt_theta_agent_1 = torch.autograd.grad(
@@ -280,8 +281,11 @@ def dial_episode(i, batch_size = 1):
                 if  derivative_wrt_theta_agent_1[jhg2] is not None:
                   aggregate_theta_grad_wrt_message[jhg2] += derivative_wrt_theta_agent_1[jhg2]/batch_size
 
-            # aggregate_theta_grad_wrt_message = [param + derivative_wrt_theta_agent_1[jhg] for jhg, param in enumerate(aggregate_theta_grad_wrt_message)]
-            
+                # else:
+                #     print(param_names[jhg2])
+                #     print("t:", t)
+                #     print("derivative_wrt_theta_agent_1[jhg2] is None")
+                    
             
 
         _,message_2, _,_,_ = cnet(obs2_t_minus_1, msg_1_t_minus_1,a2_t_minus_1, agent_id_2, h2_1_t_minus_1, h2_2_t_minus_1)
