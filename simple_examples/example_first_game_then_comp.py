@@ -210,11 +210,14 @@ def dial_episode(i, batch_size = 1):
             outputs=total_loss,
             inputs=list(cnet.parameters()),
             retain_graph=True,
-            create_graph=True
+            create_graph=True,
+            allow_unused=True
         )
 
         ## add like in the article 
         for i in range(len(td_error_gradients)):
+            if td_error_gradients[i] is None:
+                continue
             theta_grads[i] += td_error_gradients[i]
 
         
@@ -281,10 +284,6 @@ def dial_episode(i, batch_size = 1):
                 if  derivative_wrt_theta_agent_1[jhg2] is not None:
                   aggregate_theta_grad_wrt_message[jhg2] += derivative_wrt_theta_agent_1[jhg2]/batch_size
 
-                # else:
-                #     print(param_names[jhg2])
-                #     print("t:", t)
-                #     print("derivative_wrt_theta_agent_1[jhg2] is None")
                     
             
 
