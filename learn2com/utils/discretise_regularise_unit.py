@@ -1,6 +1,6 @@
 import os
 import sys
-
+import math
 import numpy as np
 
 if os.getcwd() not in sys.path:
@@ -10,7 +10,7 @@ from functools import partial
 
 import torch
 
-from nn_models.learn2com.utils.load_ymal import load_yaml
+from learn2com.utils.load_ymal import load_yaml
 
 
 def get_discretise_regularise_unit(config):
@@ -27,6 +27,8 @@ def get_discretise_regularise_unit(config):
 
 
 def discretise_regularise_unit(x, scale, training):
+    if torch.isnan(x).any():
+        return x
     if training:
         sample = x + torch.randn_like(x) * scale
         res = torch.sigmoid(sample)

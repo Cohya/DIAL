@@ -10,12 +10,15 @@ class Reciver(nn.Module):
     def __init__(self, input_dim: int, hidden_dim: int):
         super(Reciver, self).__init__()
         self.batch_norm = nn.BatchNorm1d(input_dim)
+        # self.layer_norm = nn.LayerNorm(input_dim)
         self.fc1 = nn.Linear(input_dim, hidden_dim)
 
     def forward(self, messeage: torch.Tensor):
         # what is the dims that I need
         m = self.batch_norm(messeage)  # Normalize the input message
+        # m = self.layer_norm(messeage)  # Apply layer normalization
         x = self.fc1(m)
+        
         return x
 
 
@@ -124,7 +127,7 @@ class C_Net(nn.Module):
 
         # Process the message
 
-        if (len(message) == 0 and message is not None) or not torch.isnan(
+        if ( len(message) == 0 and  message is not None ) or not torch.isnan(
             message
         ).any():
             message_embedding = self.reciver(message)
@@ -144,20 +147,16 @@ class C_Net(nn.Module):
         z_t_a = o_t_enbedded + message_embedding + agend_id_embedded + action_embedding
 
         # Reshape z_t_a for GRU input
-        z_t_a = z_t_a.unsqueeze(1)  # (B, 1, emmbedding_dim)
-        # if h_1 is None:  # torch.randn(1, batch_size, 128)
-        #     h_1 = torch.zeros(1, z_t_a.size(0), 128).to(
-        #         z_t_a.device
-        #     )  # (num_layers, batch_size, hidden_size)
-        # else:
-        h_1 = h_1.to(z_t_a.device)
+        if len(z_t_a.size()) == 2:
+            z_t_a = z_t_a.unsqueeze(1)  # (B, 1, emmbedding_dim)
+        elif len(z_t_a.size()) == 1:
+            z_t_a = z_t_a.unsqueeze(0)
 
-        # if h_2 is None:
-        #     h_2 = torch.zeros(1, z_t_a.size(0), 128).to(
-        #         z_t_a.device
-        #     )  # (num_layers, batch_size, hidden_size)
-        # else:
+        h_1 = h_1.to(z_t_a.device)
         h_2 = h_2.to(z_t_a.device)
+        
+        # h_1 = h_1.reshape_as(z_t_a)
+        # h_2 = h_2.reshape_as(z_t_a)
 
         out1, h1 = self.gru1(z_t_a, h_1)  # Add batch dimension
         out2, h2 = self.gru2(out1, h_2)  # h1[0] is the output of the GRU

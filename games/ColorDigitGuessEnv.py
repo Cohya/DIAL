@@ -100,17 +100,15 @@ class ColorDigitGuessEnv:
             term1 = digit_1 + a2 + color_2
             term2 = digit_2 + a2 + color_1
             reward[:, 1] = 2 * (-1) ** term1 + (-1) ** term2
+            
         elif self.game_level == "easy" and self.step_counter > 1:
             a1, a2 = actions[0], actions[1]
-            # Reward for agent 1
             term1 = digit_2 + a1
-            # term2 = digit_1 + a1
-            reward[:, 0] = 2 * (-1) ** term1  # + (-1) ** term2
+            reward[:, 0] = 2 * (-1) ** term1  
 
             # Reward for agent 2
-            term1 = digit_1 + a2  # + color_2
-            # term2 = digit_2 + a2 + color_1
-            reward[:, 1] = 2 * (-1) ** term1  # + (-1) ** term2
+            term1 = digit_1 + a2  
+            reward[:, 1] = 2 * (-1) ** term1  
 
         # Cooperative reward mixing
         reward_coop = torch.zeros_like(reward)
@@ -146,11 +144,11 @@ class ColorDigitGuessEnv:
         return self.get_obs(), reward, terminal, self.info
 
 
-# env = ColorDigitGuessEnv()
-# obs1, obs2 = env.reset()
-# done = False
-# while not done:
+env = ColorDigitGuessEnv()
+obs1, obs2 = env.reset()
+done = False
+while not done:
 
-#     actions = torch.randint(0, 10, (env.bs, 2))  # random actions
-#     _, rewards, done = env.step(actions)
-#     print(rewards[:5])
+    actions = torch.randint(0, 10, (env.bs, 2))  # random actions
+    _, rewards, done = env.step(actions)
+    print(rewards[:5])
