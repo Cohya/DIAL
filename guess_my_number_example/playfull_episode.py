@@ -9,7 +9,7 @@ import torch
 import numpy as np 
 
 from guess_my_number_example.discret_regularize_unit import dru
-def play_full_episode(env, agent1, agent2, hidden_dim, training = True ):
+def play_full_episode(env, agent1network, agent2network, hidden_dim, training = True ):
     obs = env.reset()
     done = False
     h1 = torch.zeros(1, hidden_dim)
@@ -34,6 +34,15 @@ def play_full_episode(env, agent1, agent2, hidden_dim, training = True ):
                     "next_obs":[],
                     "done": []
                     }
+    
+    if training:
+        agent1network.train()
+        agent2network.train()
+    else:
+        agent1network.eval()
+        agent2network.eval()
+
+
     while not done:
 
 
@@ -42,7 +51,7 @@ def play_full_episode(env, agent1, agent2, hidden_dim, training = True ):
         # Agent 1 
         msg2  = dru(m2, training = training)
         concat_input_1= torch.cat([torch.Tensor(obs["agent_1"]), msg2], dim =-1)
-        q1, m1_next, h1_next = agent1(torch.Tensor(concat_input_1), h1)
+        q1, m1_next, h1_next = agent1network(torch.Tensor(concat_input_1), h1)
   
         
         # epsilon-greedy action selection
@@ -54,7 +63,7 @@ def play_full_episode(env, agent1, agent2, hidden_dim, training = True ):
         # Agent 2
         msg1 = dru(m1)
         concat_input_2 = torch.cat([torch.Tensor(obs["agent_2"]), msg1], dim=-1)
-        q2, m2_next, h2_next = agent2(torch.Tensor(concat_input_2), h2)
+        q2, m2_next, h2_next = agent2network(torch.Tensor(concat_input_2), h2)
   
         
         # epsilon-greedy action selection
@@ -69,16 +78,16 @@ def play_full_episode(env, agent1, agent2, hidden_dim, training = True ):
         r1 , r2 = rewards
         ## Record
         agent_1_record["obs"].append(obs["agent_1"])
-        agent_1_record["msg_sent"].append(m1) #  we are saving the actual message not the encoded one
-        agent_1_record["h"].append(h1)
+        agent_1_record["msg_sent"].append(m1.detach()) #  we are saving the actual message not the encoded one
+        agent_1_record["h"].append(h1.detach())
         agent_1_record["a"].append(a1)
         agent_1_record["r"].append(r1)
         agent_1_record["next_obs"].append(next_obs["agent_1"])
         agent_1_record["done"].append(done)
   
         agent_2_record["obs"].append(obs["agent_2"])
-        agent_2_record["msg_sent"].append(m2)
-        agent_2_record["h"].append(h2)
+        agent_2_record["msg_sent"].append(m2.detach())
+        agent_2_record["h"].append(h2.detach())
         agent_2_record["a"].append(a2)
         agent_2_record["r"].append(r2)
         agent_2_record["next_obs"].append(next_obs["agent_2"])

@@ -13,7 +13,7 @@ import torch.nn.functional as F
 import numpy as np
 import pickle 
 from guess_my_number_example.playfull_episode import play_full_episode
-
+from guess_my_number_example.discret_regularize_unit import dru
 from guess_my_number_example.dial_algorithm import apply_dial_algorithm
 
 
@@ -23,32 +23,33 @@ msg_dim = 1
 action_dim = 5
 max_steps = 5 #num of bits are 5-1
 
-agent1 = AgentNet(input_dim + msg_dim, hidden_dim, msg_dim, action_dim)
-agent2 = AgentNet(input_dim + msg_dim, hidden_dim, msg_dim, action_dim)
+agent1network = AgentNet(input_dim + msg_dim, hidden_dim, msg_dim, action_dim)
+agent2network = AgentNet(input_dim + msg_dim, hidden_dim, msg_dim, action_dim)
 agnet_1_target = AgentNet(input_dim + msg_dim, hidden_dim, msg_dim, action_dim)
 # Share weights 
-agent2.load_state_dict(agent1.state_dict())
-agnet_1_target.load_state_dict(agent1.state_dict())
-optim = torch.optim.Adam(list(agent1.parameters()) + list(agent2.parameters()), lr=1e-4)#was 3
+agent2network.load_state_dict(agent1network.state_dict())
+agnet_1_target.load_state_dict(agent1network.state_dict())
+optim = torch.optim.Adam(list(agent1network.parameters()) + list(agent2network.parameters()), lr=1e-4)#was 3
 
 env = GuessMyNumberEnv(max_steps = max_steps, action_space = action_dim)
 gamma = 0.9
 loss_vec = []
 average_r = []
+max_infernec_avege_reward = -sys.maxsize
 for episode in range(100000):
 
-    agent_1_record, agent_2_record , avege_reward = play_full_episode(env, agent1, agent2, hidden_dim)
+    agent_1_record, agent_2_record , avege_reward = play_full_episode(env, agent1network, agent2network, hidden_dim)
 
     average_r.append(avege_reward)
 
-    loss,gradients_agent = apply_dial_algorithm(agent_1_record, agent_2_record, agent1, agent2, optim, gamma, agnet_1_target)
+    loss,gradients_agent = apply_dial_algorithm(agent_1_record, agent_2_record, agent1network, agent2network, optim, gamma, agnet_1_target)
 
     loss_vec.append(loss)
     ## lets applay the gradient to the network 
     gradint_agent_1 = gradients_agent[0]
     gradint_agent_2 = gradients_agent[1]
     optim.zero_grad()
-    for param,grad, grad2 in zip(agent1.parameters(), gradint_agent_1, gradint_agent_2):
+    for param,grad, grad2 in zip(agent1network.parameters(), gradint_agent_1, gradint_agent_2):
         gradient_of_param = (grad + grad2) / 2
         if gradient_of_param is None:
             continue
@@ -58,17 +59,31 @@ for episode in range(100000):
     optim.step()
 
     # copy weights
-    agent2.load_state_dict(agent1.state_dict())
+    agent2network.load_state_dict(agent1network.state_dict())
     if episode % 100 == 0:
-        agnet_1_target.load_state_dict(agent1.state_dict())
-
-    if episode % 10000 == 0:
-        # inference_step = play_full_episode(env, agent1, agent2, hidden_dim, inference=False)
-        print("episode: ", episode, "average reward: ", np.mean(average_r[-100:]), "loss: ", np.mean(loss_vec[-100:]))
+        agnet_1_target.load_state_dict(agent1network.state_dict())
 
     if episode % 1000 == 0:
-        torch.save(agent1.state_dict(), f"agent1_{episode}.pth")
-        torch.save(agent2.state_dict(), f"agent2_{episode}.pth")
+        print("episode: ", episode, "average reward: ", np.mean(average_r[-100:]), "loss: ", np.mean(loss_vec[-100:]))
+
+    if episode % 10000 == 0:
+        avege_reward_infernece = 0
+        for _ in range(100):
+            agent_1_record, agent_2_record , avege_reward =  play_full_episode(env, agent1network, agent2network, hidden_dim, training=False)
+            avege_reward_infernece += avege_reward
+
+        
+        print("Agent 1 obs:", agent_1_record["obs"][-1], "agent_1_messages:", [int(dru(me.detach(), training=False).detach().numpy()[0][0]) for me in agent_1_record["msg_sent"]])
+        print("Agent 2 obs:", agent_2_record["obs"][-1], "agent_2_messages:", [int(dru(me.detach(), training=False).detach().numpy()[0][0]) for me in agent_2_record["msg_sent"]])
+        
+        avege_reward_infernece /= 100
+        if avege_reward_infernece > max_infernec_avege_reward:
+            max_infernec_avege_reward = avege_reward_infernece
+            torch.save(agent1network.state_dict(), f"agent1_{episode}.pth")
+            torch.save(agent2network.state_dict(), f"agent2_{episode}.pth")
+            print("Saved model with max average reward: ", max_infernec_avege_reward)
+
+        
 
 with open("loss_vec.pk", "wb") as file:
     pickle.dump(loss_vec, file)
