@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from learn2com.nn_networks.C_Net import C_Net
+from networks.C_Net import C_Net
 
 def inspect_layer_weights(layer, layer_name="Layer"):
     """Inspect weights of a specific layer"""

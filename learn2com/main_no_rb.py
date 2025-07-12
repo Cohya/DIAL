@@ -12,7 +12,7 @@ import torch.nn.functional as F
 from games.ColorDigitGuessEnv import ColorDigitGuessEnv
 from learn2com.agents.lean_to_com_agent import Agent
 from learn2com.methods.ddqn import DDQN
-from learn2com.nn_networks.C_Net import C_Net
+from networks.C_Net import C_Net
 from learn2com.utils.discretise_regularise_unit import (
     get_discretise_regularise_unit,
 )

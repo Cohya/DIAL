@@ -45,9 +45,6 @@ def play_full_episode(env, agent1network, agent2network, hidden_dim, training = 
 
     while not done:
 
-
-
-
         # Agent 1 
         msg2  = dru(m2, training = training)
         concat_input_1= torch.cat([torch.Tensor(obs["agent_1"]), msg2], dim =-1)

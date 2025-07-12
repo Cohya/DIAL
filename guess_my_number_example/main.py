@@ -4,7 +4,8 @@ import sys
 if os.getcwd() not in sys.path:
     sys.path.append(os.getcwd())
 
-from guess_my_number_example.networks import AgentNet
+from networks.simple_network import AgentNet
+from networks.C_Net import C_Net
 from guess_my_number_example.guess_my_number import GuessMyNumberEnv
 import matplotlib.pyplot as plt 
 import torch
@@ -22,10 +23,14 @@ hidden_dim = 32
 msg_dim = 1
 action_dim = 5
 max_steps = 5 #num of bits are 5-1
+number_of_agents = 2 
 
 agent1network = AgentNet(input_dim + msg_dim, hidden_dim, msg_dim, action_dim)
 agent2network = AgentNet(input_dim + msg_dim, hidden_dim, msg_dim, action_dim)
 agnet_1_target = AgentNet(input_dim + msg_dim, hidden_dim, msg_dim, action_dim)
+
+# Use C-Net 
+C_Net = C_Net(obs_dims=input_dim, number_of_agents=number_of_agents, action_dims=action_dim, message_dims=msg_dim, embedding_dim=hidden_dim)
 # Share weights 
 agent2network.load_state_dict(agent1network.state_dict())
 agnet_1_target.load_state_dict(agent1network.state_dict())
