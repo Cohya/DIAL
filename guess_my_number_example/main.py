@@ -24,13 +24,21 @@ msg_dim = 1
 action_dim = 5
 max_steps = 5 #num of bits are 5-1
 number_of_agents = 2 
+using_CNet = False
+netwotk_architecture = "simple_network"
 
-agent1network = AgentNet(input_dim + msg_dim, hidden_dim, msg_dim, action_dim)
-agent2network = AgentNet(input_dim + msg_dim, hidden_dim, msg_dim, action_dim)
-agnet_1_target = AgentNet(input_dim + msg_dim, hidden_dim, msg_dim, action_dim)
+if netwotk_architecture == "simple_network":
+    agent1network = AgentNet(input_dim + msg_dim, hidden_dim, msg_dim, action_dim)
+    agent2network = AgentNet(input_dim + msg_dim, hidden_dim, msg_dim, action_dim)
+    agnet_1_target = AgentNet(input_dim + msg_dim, hidden_dim, msg_dim, action_dim)
+    
+elif netwotk_architecture == "C_Net":
+    agent1network = C_Net(obs_dims=input_dim, number_of_agents=number_of_agents, action_dims=action_dim, message_dims=msg_dim, embedding_dim=hidden_dim)
+    agent2network = C_Net(obs_dims=input_dim, number_of_agents=number_of_agents, action_dims=action_dim, message_dims=msg_dim, embedding_dim=hidden_dim)
+    agnet_1_target = C_Net(obs_dims=input_dim, number_of_agents=number_of_agents, action_dims=action_dim, message_dims=msg_dim, embedding_dim=hidden_dim)
 
-# Use C-Net 
-C_Net = C_Net(obs_dims=input_dim, number_of_agents=number_of_agents, action_dims=action_dim, message_dims=msg_dim, embedding_dim=hidden_dim)
+else:
+    raise ValueError(f"Network architecture {netwotk_architecture} is not supported")
 # Share weights 
 agent2network.load_state_dict(agent1network.state_dict())
 agnet_1_target.load_state_dict(agent1network.state_dict())
@@ -84,8 +92,8 @@ for episode in range(100000):
         avege_reward_infernece /= 100
         if avege_reward_infernece > max_infernec_avege_reward:
             max_infernec_avege_reward = avege_reward_infernece
-            torch.save(agent1network.state_dict(), f"agent1_{episode}.pth")
-            torch.save(agent2network.state_dict(), f"agent2_{episode}.pth")
+            torch.save(agent1network.state_dict(), f"agent1_{netwotk_architecture}_best_inference.pth")
+            torch.save(agent2network.state_dict(), f"agent2_{netwotk_architecture}_best_inference.pth")
             print("Saved model with max average reward: ", max_infernec_avege_reward)
 
         

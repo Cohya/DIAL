@@ -94,18 +94,20 @@ class C_Net(nn.Module):
 
         self.LookUpAction = LookUp(input_dim=action_dims, output_dim=embedding_dim)
 
-        self.gru1 = nn.GRU(
-            input_size=embedding_dim,
-            hidden_size=embedding_dim,
-            num_layers=1,
-            batch_first=True,
-        )
-        self.gru2 = nn.GRU(
-            input_size=embedding_dim,
-            hidden_size=embedding_dim,
-            num_layers=1,
-            batch_first=True,
-        )
+        self.gru1 = self.rnn = nn.GRUCell(embedding_dim, embedding_dim)
+        self.gru2 = self.rnn = nn.GRUCell(embedding_dim, embedding_dim)
+        # self.gru1 = nn.GRU(
+        #     input_size=embedding_dim,
+        #     hidden_size=embedding_dim,
+        #     num_layers=1,
+        #     batch_first=True,
+        # )
+        # self.gru2 = nn.GRU(
+        #     input_size=embedding_dim,
+        #     hidden_size=embedding_dim,
+        #     num_layers=1,
+        #     batch_first=True,
+        # )
 
         self.mlp_layer = MLPNet(
             input_dim=embedding_dim, hidden_dim=embedding_dim, output_dim=(action_dims + message_dims)
@@ -161,13 +163,16 @@ class C_Net(nn.Module):
         # h_1 = h_1.reshape_as(z_t_a)
         # h_2 = h_2.reshape_as(z_t_a)
 
-        out1, h1 = self.gru1(z_t_a, h_1)  # Add batch dimension
-        out2, h2 = self.gru2(out1, h_2)  # h1[0] is the output of the GRU
+        h1 = self.gru1(z_t_a, h_1)  # Add batch dimension
+        h2 = self.gru2(h1, h_2)  # h1[0] is the output of the GRU
         out2 = out2.squeeze(1)  # bring
         UM = self.mlp_layer(out2)
         q_values = UM[:, : self.action_dims]
         message = UM[:, self.action_dims :]
-        return q_values, message, out2, h1, h2
+        q = q_values
+        m = message
+        h  = [h1, h2]
+        return q, m, h  
 
     def get_weights(self):
         return self.parameters()
@@ -185,3 +190,4 @@ class C_Net(nn.Module):
 
 if __name__ == "__main__":
     cnet = C_Net(obs_dims=10, number_of_agents=2, action_dims=5, message_dims=8, embedding_dim=128)
+    
