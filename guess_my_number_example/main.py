@@ -49,6 +49,9 @@ gamma = 0.9
 loss_vec = []
 average_r = []
 max_infernec_avege_reward = -sys.maxsize
+optim.zero_grad()
+batch_gradient_of_param = [torch.zeros_like(param) for param in agent1network.parameters()]
+batch_size = 1
 for episode in range(100000):
 
     agent_1_record, agent_2_record , avege_reward = play_full_episode(env, agent1network, agent2network, hidden_dim)
@@ -61,15 +64,23 @@ for episode in range(100000):
     ## lets applay the gradient to the network 
     gradint_agent_1 = gradients_agent[0]
     gradint_agent_2 = gradients_agent[1]
-    optim.zero_grad()
-    for param,grad, grad2 in zip(agent1network.parameters(), gradint_agent_1, gradint_agent_2):
+    
+
+    for grad, grad2, batch_gradient_of_param_i in zip(gradint_agent_1, gradint_agent_2, batch_gradient_of_param):
         gradient_of_param = (grad + grad2) / 2
         if gradient_of_param is None:
             continue
-        param.grad = gradient_of_param
+        batch_gradient_of_param_i += gradient_of_param
+        # param.grad = gradient_of_param
 
-
-    optim.step()
+    if (episode+1) % batch_size == 0:
+        for param, batch_gradient_of_param_i in zip(agent1network.parameters(), batch_gradient_of_param):
+            if gradient_of_param is None:
+                continue
+            param.grad = batch_gradient_of_param_i /  batch_size
+        optim.step()
+        optim.zero_grad()
+        batch_gradient_of_param = [torch.zeros_like(param) for param in agent1network.parameters()]
 
     # copy weights
     agent2network.load_state_dict(agent1network.state_dict())
