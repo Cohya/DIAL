@@ -9,7 +9,7 @@ import torch
 import numpy as np 
 
 from guess_my_number_example.discret_regularize_unit import dru
-def play_full_episode(env, agent1, agent2, optim, gamma, hidden_dim):
+def play_full_episode(env, agent1, agent2, hidden_dim, training = True ):
     obs = env.reset()
     done = False
     h1 = torch.zeros(1, hidden_dim)
@@ -40,7 +40,7 @@ def play_full_episode(env, agent1, agent2, optim, gamma, hidden_dim):
 
 
         # Agent 1 
-        msg2  = dru(m2)
+        msg2  = dru(m2, training = training)
         concat_input_1= torch.cat([torch.Tensor(obs["agent_1"]), msg2], dim =-1)
         q1, m1_next, h1_next = agent1(torch.Tensor(concat_input_1), h1)
   

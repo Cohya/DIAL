@@ -7,7 +7,7 @@ import torch
 
 from guess_my_number_example.discret_regularize_unit import  dru 
 
-def apply_dial_algorithm(agent_1_record, agent_2_record, agent1, agent2, optim, gamma, hidden_dim, agnet_1_target):
+def apply_dial_algorithm(agent_1_record, agent_2_record, agent1, agent2, optim, gamma, agnet_1_target):
     loss = 0.0
     ## Reset the gradients of the parameters
     optim.zero_grad()

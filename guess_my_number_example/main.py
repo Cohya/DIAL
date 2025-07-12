@@ -37,12 +37,11 @@ loss_vec = []
 average_r = []
 for episode in range(100000):
 
-
-    agent_1_record, agent_2_record , avege_reward = play_full_episode(env, agent1, agent2, optim, gamma, hidden_dim)
+    agent_1_record, agent_2_record , avege_reward = play_full_episode(env, agent1, agent2, hidden_dim)
 
     average_r.append(avege_reward)
 
-    loss,gradients_agent = apply_dial_algorithm(agent_1_record, agent_2_record, agent1, agent2, optim, gamma, hidden_dim, agnet_1_target)
+    loss,gradients_agent = apply_dial_algorithm(agent_1_record, agent_2_record, agent1, agent2, optim, gamma, agnet_1_target)
 
     loss_vec.append(loss)
     ## lets applay the gradient to the network 
@@ -63,8 +62,13 @@ for episode in range(100000):
     if episode % 100 == 0:
         agnet_1_target.load_state_dict(agent1.state_dict())
 
-    if episode % 100 == 0:
+    if episode % 10000 == 0:
+        # inference_step = play_full_episode(env, agent1, agent2, hidden_dim, inference=False)
         print("episode: ", episode, "average reward: ", np.mean(average_r[-100:]), "loss: ", np.mean(loss_vec[-100:]))
+
+    if episode % 1000 == 0:
+        torch.save(agent1.state_dict(), f"agent1_{episode}.pth")
+        torch.save(agent2.state_dict(), f"agent2_{episode}.pth")
 
 with open("loss_vec.pk", "wb") as file:
     pickle.dump(loss_vec, file)
