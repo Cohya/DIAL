@@ -15,7 +15,8 @@ class Reciver(nn.Module):
 
     def forward(self, messeage: torch.Tensor):
         # what is the dims that I need
-        m = self.batch_norm(messeage)  # Normalize the input message
+        # m = self.batch_norm(messeage)  # Normalize the input message (in batch case)
+        m = messeage
         # m = self.layer_norm(messeage)  # Apply layer normalization
         x = self.fc1(m)
         # x = F.relu(x)
@@ -30,18 +31,19 @@ class LookUp(nn.Module):
             input_dim, output_dim
         )  # Assuming two agents, each represented by a unique index
 
-    def forward(self, agent_index: torch.long):
+    def forward(self, agent_index: torch.Tensor):
         # agent_index = torch.tensor([0, 1], dtype=torch.long)  # batch of two agents
         # torch.long == torch.int64  # This is True
         # agent_index is a tensor containing the index of the agent
-        agent_index = torch.tensor(agent_index, dtype=torch.long)
+        if not isinstance(agent_index, torch.Tensor):
+            agent_index = torch.tensor(agent_index, dtype=torch.long)
         return self.f(agent_index)
 
 
 class TaskSpecificNet(nn.Module):
     def __init__(self, input_dim: int, hidden_dim: int, output_dim: int):
         super(TaskSpecificNet, self).__init__()
-        input_dim = math.prod(input_dim)
+        # input_dim = math.prod(input_dim)
         self.fc1 = nn.Linear(input_dim, hidden_dim)
         self.fc2 = nn.Linear(hidden_dim, output_dim)
 
@@ -106,15 +108,15 @@ class C_Net(nn.Module):
         )
 
         self.mlp_layer = MLPNet(
-            input_dim=128, hidden_dim=128, output_dim=(action_dims + message_dims)
+            input_dim=embedding_dim, hidden_dim=embedding_dim, output_dim=(action_dims + message_dims)
         )
 
     def forward(
         self,
         obs: torch.Tensor,
         message: torch.Tensor,
-        u_tm1: int,
-        a: torch.long,
+        u_tm1: torch.Tensor,
+        a: torch.Tensor,
         h_1: torch.Tensor,
         h_2: torch.Tensor,
     ):
@@ -174,6 +176,12 @@ class C_Net(nn.Module):
         for param, other_param in zip(self.parameters(), other_network.parameters()):
             param.data.copy_(other_param.data)
 
+    def soft_update_from_other_network(self, other_network: torch.nn.Module, tau: float = 0.01):
+        with torch.no_grad():
+            for param, target_param in zip(other_network.parameters(), self.parameters()):
+                # target_param.data.mul_(1.0 - tau).add_(tau * param.data) ## <-more efficient
+                target_param.data = (1.0 - tau) * target_param.data + tau * param.data
+
 
 if __name__ == "__main__":
-    cnet = C_Net(obs_dims=10, number_of_agents=2, action_dims=5, embedding_dim=128)
+    cnet = C_Net(obs_dims=10, number_of_agents=2, action_dims=5, message_dims=8, embedding_dim=128)
