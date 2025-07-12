@@ -92,8 +92,8 @@ for episode in range(100000):
         avege_reward_infernece /= 100
         if avege_reward_infernece > max_infernec_avege_reward:
             max_infernec_avege_reward = avege_reward_infernece
-            torch.save(agent1network.state_dict(), f"agent1_{netwotk_architecture}_best_inference.pth")
-            torch.save(agent2network.state_dict(), f"agent2_{netwotk_architecture}_best_inference.pth")
+            torch.save(agent1network.state_dict(), f"agent1_{netwotk_architecture}_best_inference_iteration_{episode}.pth")
+            torch.save(agent2network.state_dict(), f"agent2_{netwotk_architecture}_best_inference_iteration_{episode}.pth")
             print("Saved model with max average reward: ", max_infernec_avege_reward)
 
         
