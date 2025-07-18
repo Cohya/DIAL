@@ -40,7 +40,7 @@ def apply_dial_algorithm(agent_1_record, agent_2_record, agent1, agent2, optim, 
                 m2 = history_of_the_game[(agent_id + 1) % 2]["msg_sent"][t+1]
                 msg2 = dru(m2)
 
-                if agent.__class__.__name__ == "AgentNet":
+                if agent.__class__.__name__ in ["AgentNet2", "AgentNet"]:
                     input_to_net_t_plus_1 = torch.cat([torch.Tensor(next_obs), msg2], dim=-1)
                     q_target,_,_ = agnet_1_target(input_to_net_t_plus_1, next_h)
                 
@@ -56,7 +56,7 @@ def apply_dial_algorithm(agent_1_record, agent_2_record, agent1, agent2, optim, 
 
             dru_a_tag_previuse = dru(other_agetn_m_previuse.detach())
 
-            if agent.__class__.__name__ == "AgentNet":
+            if agent.__class__.__name__ in ["AgentNet", "AgentNet2"]:
                 input_to_net_t = torch.cat([torch.Tensor(obs), dru_a_tag_previuse], dim=-1)
                 q_s_a, _, _ = agent(input_to_net_t, h)
 
@@ -95,7 +95,7 @@ def apply_dial_algorithm(agent_1_record, agent_2_record, agent1, agent2, optim, 
 
                 dru_m_a_t = dru(m_a_t)
                 
-                if other_agent.__class__.__name__ == "AgentNet":
+                if other_agent.__class__.__name__ in ["AgentNet", "AgentNet2"]:
                     input_to_net_t_plus_1 = torch.cat([torch.Tensor(other_agent_next_observation), dru_m_a_t], dim=-1)
                     q_other_agent_t_plus_1,m_a_tag_t_plus_1,_ = other_agent(input_to_net_t_plus_1, other_agent_next_h)
 
@@ -123,7 +123,7 @@ def apply_dial_algorithm(agent_1_record, agent_2_record, agent1, agent2, optim, 
                     m_a_t_plus_1 = history_of_the_game[agent_id]["msg_sent"][t+1].detach()
                     dru_m_a_t_plus_1 = dru(m_a_t_plus_1).detach()
 
-                    if agent.__class__.__name__ == "AgentNet": 
+                    if agent.__class__.__name__ in ["AgentNet2","AgentNet"]: 
   
                         input_to_net_t_plus_2 = torch.cat([torch.Tensor(other_agent_next_observation_t_plus_2), dru_m_a_t_plus_1], dim=-1)
 
@@ -160,7 +160,7 @@ def apply_dial_algorithm(agent_1_record, agent_2_record, agent1, agent2, optim, 
 
                 t_minus_1_input  = torch.cat([torch.Tensor(obs_t_minus_1), message_other_aget_t_minus_1_dru], dim=-1)
 
-                if agent.__class__.__name__ == "AgentNet": 
+                if agent.__class__.__name__ in ["AgentNet",  "AgentNet2"]: 
                     _,m_t, _ = agent(t_minus_1_input, h_t_minus_1)
 
                 elif agent.__class__.__name__ == "C_Net":

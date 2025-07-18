@@ -13,7 +13,7 @@ def play_full_episode(env, agent1network, agent2network, hidden_dim, training = 
     obs = env.reset()
     done = False
 
-    if agent1network.__class__.__name__ == "AgentNet":
+    if agent1network.__class__.__name__ in ["AgentNet", "AgentNet2"]:
         h1 = torch.zeros(1, hidden_dim)
         h2 = torch.zeros(1, hidden_dim)
     elif agent1network.__class__.__name__ == "C_Net":
@@ -56,7 +56,7 @@ def play_full_episode(env, agent1network, agent2network, hidden_dim, training = 
 
         # Agent 1 
         msg2  = dru(m2, training = training)
-        if  agent1network.__class__.__name__ == "AgentNet":
+        if  agent1network.__class__.__name__ in ["AgentNet", "AgentNet2"]:
             concat_input_1= torch.cat([torch.Tensor(obs["agent_1"]), msg2], dim =-1)
             q1, m1_next, h1_next = agent1network(torch.Tensor(concat_input_1), h1)
 
@@ -80,7 +80,7 @@ def play_full_episode(env, agent1network, agent2network, hidden_dim, training = 
         # Agent 2
         msg1 = dru(m1)
 
-        if agent2network.__class__.__name__ == "AgentNet":
+        if agent2network.__class__.__name__ in ["AgentNet", "AgentNet2"]:
             concat_input_2 = torch.cat([torch.Tensor(obs["agent_2"]), msg1], dim=-1)
             q2, m2_next, h2_next = agent2network(torch.Tensor(concat_input_2), h2)
 
@@ -107,7 +107,7 @@ def play_full_episode(env, agent1network, agent2network, hidden_dim, training = 
         ## Record
         agent_1_record["obs"].append(obs["agent_1"])
         agent_1_record["msg_sent"].append(m1.detach()) #  we are saving the actual message not the encoded one
-        if agent1network.__class__.__name__ == "AgentNet":
+        if agent1network.__class__.__name__ in ["AgentNet", "AgentNet2"]:
             agent_1_record["h"].append(h1.detach())
         else:
             agent_1_record["h"].append([hi.detach() for hi in h1])
@@ -120,7 +120,8 @@ def play_full_episode(env, agent1network, agent2network, hidden_dim, training = 
   
         agent_2_record["obs"].append(obs["agent_2"])
         agent_2_record["msg_sent"].append(m2.detach())
-        if agent1network.__class__.__name__ == "AgentNet":
+        if agent1network.__class__.__name__ in["AgentNet", "AgentNet2"]:
+
             agent_2_record["h"].append(h2.detach())
         else:
             agent_2_record["h"].append([hi.detach() for hi in h2])

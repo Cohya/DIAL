@@ -4,7 +4,7 @@ import sys
 if os.getcwd() not in sys.path:
     sys.path.append(os.getcwd())
 
-from networks.simple_network import AgentNet
+from networks.simple_network import AgentNet, AgentNet2
 from networks.C_Net import C_Net
 from guess_my_number_example.guess_my_number import GuessMyNumberEnv
 import matplotlib.pyplot as plt 
@@ -25,7 +25,7 @@ action_dim = 5
 max_steps = 5 #num of bits are 5-1
 number_of_agents = 2 
 using_CNet = False
-netwotk_architecture = "simple_network" #"C_Net"
+netwotk_architecture = "AgentNet2" # ""C_Net" # "simple_network" #"C_Net"
 batch_size = 1
 checkpoint_folder = Path("checkpoints")
 
@@ -33,7 +33,7 @@ if os.path.isdir(checkpoint_folder) is False:
     os.makedirs(checkpoint_folder)
 
 
-if netwotk_architecture == "simple_network":
+if netwotk_architecture == "AgentNet":
     agent1network = AgentNet(input_dim + msg_dim, hidden_dim, msg_dim, action_dim)
     agent2network = AgentNet(input_dim + msg_dim, hidden_dim, msg_dim, action_dim)
     agnet_1_target = AgentNet(input_dim + msg_dim, hidden_dim, msg_dim, action_dim)
@@ -43,6 +43,10 @@ elif netwotk_architecture == "C_Net":
     agent2network = C_Net(obs_dims=input_dim, number_of_agents=number_of_agents, action_dims=action_dim, message_dims=msg_dim, embedding_dim=hidden_dim)
     agnet_1_target = C_Net(obs_dims=input_dim, number_of_agents=number_of_agents, action_dims=action_dim, message_dims=msg_dim, embedding_dim=hidden_dim)
 
+elif netwotk_architecture == "AgentNet2":
+    agent1network = AgentNet2(input_dim, hidden_dim, msg_dim, action_dim)
+    agent2network = AgentNet2(input_dim, hidden_dim, msg_dim, action_dim)
+    agnet_1_target = AgentNet2(input_dim, hidden_dim, msg_dim, action_dim)
 else:
     raise ValueError(f"Network architecture {netwotk_architecture} is not supported")
 # Share weights 

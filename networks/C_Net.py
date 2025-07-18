@@ -150,7 +150,7 @@ class C_Net(nn.Module):
             action_embedding = torch.zeros_like(agend_id_embedded)
 
         # Combine observation, message embedding, and agent embedding
-        z_t_a = o_t_enbedded + message_embedding + agend_id_embedded + action_embedding
+        z_t_a = message_embedding #+ agend_id_embedded + action_embedding + o_t_enbedded 
 
         # Reshape z_t_a for GRU input
         if len(z_t_a.size()) == 2:
