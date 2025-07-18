@@ -94,20 +94,20 @@ class C_Net(nn.Module):
 
         self.LookUpAction = LookUp(input_dim=action_dims, output_dim=embedding_dim)
 
-        self.gru1 = self.rnn = nn.GRUCell(embedding_dim, embedding_dim)
-        self.gru2 = self.rnn = nn.GRUCell(embedding_dim, embedding_dim)
-        # self.gru1 = nn.GRU(
-        #     input_size=embedding_dim,
-        #     hidden_size=embedding_dim,
-        #     num_layers=1,
-        #     batch_first=True,
-        # )
-        # self.gru2 = nn.GRU(
-        #     input_size=embedding_dim,
-        #     hidden_size=embedding_dim,
-        #     num_layers=1,
-        #     batch_first=True,
-        # )
+        # self.gru1 = self.rnn = nn.GRUCell(embedding_dim, embedding_dim)
+        # self.gru2 = self.rnn = nn.GRUCell(embedding_dim, embedding_dim)
+        self.gru1 = nn.GRU(
+            input_size=embedding_dim,
+            hidden_size=embedding_dim,
+            num_layers=1,
+            batch_first=True,
+        )
+        self.gru2 = nn.GRU(
+            input_size=embedding_dim,
+            hidden_size=embedding_dim,
+            num_layers=1,
+            batch_first=True,
+        )
 
         self.mlp_layer = MLPNet(
             input_dim=embedding_dim, hidden_dim=embedding_dim, output_dim=(action_dims + message_dims)
@@ -143,7 +143,8 @@ class C_Net(nn.Module):
         o_t_enbedded = self.task_specific_net(obs)
 
         # Embed the action (u_tm1 == action at time t-1)
-        if (len(u_tm1) == 0 and u_tm1 is not None) or not torch.isnan(u_tm1).any():
+        # if (len(u_tm1) == 0 and u_tm1 is not None) or not torch.isnan(u_tm1).any():
+        if  u_tm1 is not None:
             action_embedding = self.LookUpAction(u_tm1)
         else:
             action_embedding = torch.zeros_like(agend_id_embedded)
@@ -163,8 +164,10 @@ class C_Net(nn.Module):
         # h_1 = h_1.reshape_as(z_t_a)
         # h_2 = h_2.reshape_as(z_t_a)
 
-        h1 = self.gru1(z_t_a, h_1)  # Add batch dimension
-        h2 = self.gru2(h1, h_2)  # h1[0] is the output of the GRU
+        out1, h1 = self.gru1(z_t_a, h_1)  # Add batch dimension
+        out2, h2 = self.gru2(out1, h_2)  # h1[0] is the output of the GRU
+
+
         out2 = out2.squeeze(1)  # bring
         UM = self.mlp_layer(out2)
         q_values = UM[:, : self.action_dims]

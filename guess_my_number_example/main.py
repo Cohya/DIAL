@@ -16,7 +16,7 @@ import pickle
 from guess_my_number_example.playfull_episode import play_full_episode
 from guess_my_number_example.discret_regularize_unit import dru
 from guess_my_number_example.dial_algorithm import apply_dial_algorithm
-
+from pathlib import Path  
 
 input_dim = 1
 hidden_dim = 32
@@ -25,7 +25,13 @@ action_dim = 5
 max_steps = 5 #num of bits are 5-1
 number_of_agents = 2 
 using_CNet = False
-netwotk_architecture = "simple_network"
+netwotk_architecture = "simple_network" #"C_Net"
+batch_size = 1
+checkpoint_folder = Path("checkpoints")
+
+if os.path.isdir(checkpoint_folder) is False:
+    os.makedirs(checkpoint_folder)
+
 
 if netwotk_architecture == "simple_network":
     agent1network = AgentNet(input_dim + msg_dim, hidden_dim, msg_dim, action_dim)
@@ -51,7 +57,7 @@ average_r = []
 max_infernec_avege_reward = -sys.maxsize
 optim.zero_grad()
 batch_gradient_of_param = [torch.zeros_like(param) for param in agent1network.parameters()]
-batch_size = 1
+
 for episode in range(100000):
 
     agent_1_record, agent_2_record , avege_reward = play_full_episode(env, agent1network, agent2network, hidden_dim)
@@ -103,8 +109,11 @@ for episode in range(100000):
         avege_reward_infernece /= 100
         if avege_reward_infernece > max_infernec_avege_reward:
             max_infernec_avege_reward = avege_reward_infernece
-            torch.save(agent1network.state_dict(), f"agent1_{netwotk_architecture}_best_inference_iteration_{episode}.pth")
-            torch.save(agent2network.state_dict(), f"agent2_{netwotk_architecture}_best_inference_iteration_{episode}.pth")
+            path_to_sv = checkpoint_folder  / f"agent1_{netwotk_architecture}_best_inference_iteration_{episode}.pth"
+
+            path_to_save_agent_2 =  checkpoint_folder / f"agent2_{netwotk_architecture}_best_inference_iteration_{episode}.pth"
+            torch.save(agent1network.state_dict(),path_to_sv)
+            torch.save(agent2network.state_dict(), path_to_save_agent_2)
             print("Saved model with max average reward: ", max_infernec_avege_reward)
 
         

@@ -39,13 +39,35 @@ def apply_dial_algorithm(agent_1_record, agent_2_record, agent1, agent2, optim, 
                 next_h = agent_history["h"][t+1]
                 m2 = history_of_the_game[(agent_id + 1) % 2]["msg_sent"][t+1]
                 msg2 = dru(m2)
-                input_to_net_t_plus_1 = torch.cat([torch.Tensor(next_obs), msg2], dim=-1)
-                q_target,_,_ = agnet_1_target(input_to_net_t_plus_1, next_h)
+
+                if agent.__class__.__name__ == "AgentNet":
+                    input_to_net_t_plus_1 = torch.cat([torch.Tensor(next_obs), msg2], dim=-1)
+                    q_target,_,_ = agnet_1_target(input_to_net_t_plus_1, next_h)
+                
+                elif agent.__class__.__name__ == "C_Net":
+                    message = msg2
+                    u_tm1 = None if t ==0 else agent_history["a"][t]
+                    h_1 = next_h[0]
+                    h_2 = next_h[1]
+                    a_id  =  torch.tensor(agent_id, dtype=torch.long)
+                    q_target, _, _ = agnet_1_target(torch.Tensor(next_obs), message, u_tm1, a_id, h_1, h_2)
+               
                 target = r + gamma * torch.max(q_target, dim=1)[0].detach()
 
             dru_a_tag_previuse = dru(other_agetn_m_previuse.detach())
-            input_to_net_t = torch.cat([torch.Tensor(obs), dru_a_tag_previuse], dim=-1)
-            q_s_a, _, _ = agent(input_to_net_t, h)
+
+            if agent.__class__.__name__ == "AgentNet":
+                input_to_net_t = torch.cat([torch.Tensor(obs), dru_a_tag_previuse], dim=-1)
+                q_s_a, _, _ = agent(input_to_net_t, h)
+
+            elif  agent.__class__.__name__ == "C_Net":
+                message = dru_a_tag_previuse
+                u_tm1 = None if t ==0 else agent_history["a"][t-1]
+                h_1 = h[0]
+                h_2 = h[1]
+                a_id  =  torch.tensor(agent_id, dtype=torch.long)
+                q_s_a, _, _ = agent(torch.Tensor(obs), message, u_tm1, a_id, h_1, h_2)
+            
             
             del_Q_t_a = target - q_s_a[0][a]
 
@@ -67,14 +89,25 @@ def apply_dial_algorithm(agent_1_record, agent_2_record, agent1, agent2, optim, 
                 m_a_t = history_of_the_game[agent_id]["msg_sent"][t].detach().requires_grad_(True)
                 other_agent = agents[(agent_id + 1) % 2]
                 other_agent_next_observation = other_agent_history["obs"][t+1]
-                other_agent_next_h = other_agent_history["h"][t+1].detach()
+                other_agent_next_h = other_agent_history["h"][t+1]
                 other_agent_next_a = other_agent_history["a"][t+1]
                 other_agent_next_done  = other_agent_history["done"][t+1]
 
                 dru_m_a_t = dru(m_a_t)
                 
-                input_to_net_t_plus_1 = torch.cat([torch.Tensor(other_agent_next_observation), dru_m_a_t], dim=-1)
-                q_other_agent_t_plus_1,m_a_tag_t_plus_1,_ = other_agent(input_to_net_t_plus_1, other_agent_next_h)
+                if other_agent.__class__.__name__ == "AgentNet":
+                    input_to_net_t_plus_1 = torch.cat([torch.Tensor(other_agent_next_observation), dru_m_a_t], dim=-1)
+                    q_other_agent_t_plus_1,m_a_tag_t_plus_1,_ = other_agent(input_to_net_t_plus_1, other_agent_next_h)
+
+                elif other_agent.__class__.__name__ == "C_Net":
+                    message = dru_m_a_t
+                    u_tm1 = None if t ==0 else other_agent_history["a"][t-1]
+                    h_1 = other_agent_next_h[0]
+                    h_2 = other_agent_next_h[1]
+                    a_id  =  torch.tensor((agent_id + 1) % 2, dtype=torch.long)
+                    q_other_agent_t_plus_1, m_a_tag_t_plus_1, _ = other_agent(torch.Tensor(other_agent_next_observation), message, u_tm1, a_id, h_1, h_2)
+
+
                 q_s_a_t_plus_1_other_agent = q_other_agent_t_plus_1[0][other_agent_next_a]
 
                 ## Calculate the target of the otehr agent 
@@ -82,15 +115,27 @@ def apply_dial_algorithm(agent_1_record, agent_2_record, agent1, agent2, optim, 
                     target_other_agent_t_plus_1 = other_agent_history["r"][t+1]
                 else:
                     other_agent_next_observation_t_plus_2 = other_agent_history["obs"][t+2]
-                    other_agent_next_h_t_plus_2 = other_agent_history["h"][t+2].detach()
+
+                   
+                    other_agent_next_h_t_plus_2 = other_agent_history["h"][t+2]
 
                     # agent future message impact
                     m_a_t_plus_1 = history_of_the_game[agent_id]["msg_sent"][t+1].detach()
                     dru_m_a_t_plus_1 = dru(m_a_t_plus_1).detach()
 
-                    input_to_net_t_plus_2 = torch.cat([torch.Tensor(other_agent_next_observation_t_plus_2), dru_m_a_t_plus_1], dim=-1)
+                    if agent.__class__.__name__ == "AgentNet": 
+  
+                        input_to_net_t_plus_2 = torch.cat([torch.Tensor(other_agent_next_observation_t_plus_2), dru_m_a_t_plus_1], dim=-1)
 
-                    q_target_t_plus_2,_,_ = agnet_1_target(input_to_net_t_plus_2, other_agent_next_h_t_plus_2)    
+                        q_target_t_plus_2,_,_ = agnet_1_target(input_to_net_t_plus_2, other_agent_next_h_t_plus_2)   
+
+                    elif agent.__class__.__name__ == "C_Net":
+                        message = dru_m_a_t_plus_1
+                        u_tm1 = None if t ==T-2 else other_agent_history["a"][t+1]
+                        h_1 = other_agent_next_h_t_plus_2[0]
+                        h_2 = other_agent_next_h_t_plus_2[1]
+                        a_id  =  torch.tensor((agent_id + 1) % 2, dtype=torch.long)
+                        q_target_t_plus_2,_,_ = agnet_1_target(torch.Tensor(other_agent_next_observation_t_plus_2), message, u_tm1, a_id, h_1, h_2)
 
                     q_s_a_t_plus_2_max = torch.max(q_target_t_plus_2, dim=1)[0].detach()
                     target_other_agent_t_plus_1 = other_agent_history["r"][t+1] + gamma * q_s_a_t_plus_2_max
@@ -109,12 +154,23 @@ def apply_dial_algorithm(agent_1_record, agent_2_record, agent1, agent2, optim, 
                 # Now calcuualet the dm_t_a/d_theta
 
                 obs_t_minus_1 = agent_history["obs"][t-1]
-                h_t_minus_1 = agent_history["h"][t-1].detach()
+                h_t_minus_1 = agent_history["h"][t-1]
                 message_other_aget_t_minus_1 = other_agent_history["msg_sent"][t-1].detach()
                 message_other_aget_t_minus_1_dru = dru(message_other_aget_t_minus_1).detach()
 
                 t_minus_1_input  = torch.cat([torch.Tensor(obs_t_minus_1), message_other_aget_t_minus_1_dru], dim=-1)
-                _,m_t, _ = agent(t_minus_1_input, h_t_minus_1)
+
+                if agent.__class__.__name__ == "AgentNet": 
+                    _,m_t, _ = agent(t_minus_1_input, h_t_minus_1)
+
+                elif agent.__class__.__name__ == "C_Net":
+                    message = message_other_aget_t_minus_1_dru
+                    u_tm1 = None if t == 1 else agent_history["a"][t-2]
+                    h_1 = h_t_minus_1[0]
+                    h_2 = h_t_minus_1[1]
+                    a_id  =  torch.tensor(agent_id , dtype=torch.long)
+                    _,m_t, _ = agent(torch.Tensor(obs_t_minus_1), message, u_tm1, a_id, h_1, h_2)
+          
 
                 d_m_a_t_to_dtheta = torch.autograd.grad(dru(m_t), agent.parameters(), retain_graph=True, allow_unused=True)
 
