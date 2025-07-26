@@ -5,7 +5,7 @@ experiment_name: "guess_my_number_actions_dims_5_netwotk_architecture_AgentNet_m
 input_dim: 1
 hidden_dim: 32
 msg_dim: 1
-action_dim: 5
+action_dim: 5 # Number of actions (0, 1, 2, 3, 4) - 5 actions
 max_steps: 5 #num of bits are 5-1
 number_of_agents: 2 
 
@@ -20,5 +20,6 @@ update_target: 100 # Update target network every 100 episodes
 
 # Training parameters
 batch_size: 1
-number_of_max_episodes: 500000
+number_of_max_episodes: 100001
 print_interval: 1000 # Print every 1000 episodes
+check_your_performance_interval: 10000 # Check performance every N episodes

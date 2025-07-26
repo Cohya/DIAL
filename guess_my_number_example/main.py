@@ -33,10 +33,11 @@ def main(config: Dict):
     number_of_max_episodes = config["number_of_max_episodes"]
     update_target = config["update_target"] # Update target network every 100 episodes
     print_interval = config["print_interval"] # Print every 1000 episodes
+    check_your_performance_interval = config["check_your_performance_interval"] # Check performance every N episodes
     ## Cretae folder for saving the experiment 
     path_to_save = get_folder_for_experiment(config)
-    checkpoint_folder = path_to_save / "checkpoints"\
-
+    checkpoint_folder = path_to_save / "checkpoints"
+    inference_performance = []
     if os.path.isdir(checkpoint_folder) is False:
         os.makedirs(checkpoint_folder)
 
@@ -108,7 +109,7 @@ def main(config: Dict):
         if episode % print_interval == 0:
             print("episode: ", episode, "average reward: ", np.mean(average_r[-100:]), "loss: ", np.mean(loss_vec[-100:]))
 
-        if episode % number_of_max_episodes == 0:
+        if episode % check_your_performance_interval == 0:
             avege_reward_infernece = 0
             for _ in range(100):
                 agent_1_record, agent_2_record , avege_reward =  play_full_episode(env, agent1network, agent2network, hidden_dim, training=False)
@@ -120,6 +121,7 @@ def main(config: Dict):
             
             
             avege_reward_infernece /= 100
+            inference_performance.append((episode, avege_reward_infernece))
             if avege_reward_infernece > max_infernec_avege_reward:
                 max_infernec_avege_reward = avege_reward_infernece
                 path_to_sv =  checkpoint_folder  / f"agent1_{netwotk_architecture}_best_inference_iteration_{episode}.pth"
@@ -142,13 +144,23 @@ def main(config: Dict):
 
     average_r = np.array(average_r)
     average_r = np.convolve(average_r, np.ones(100)/100, mode='valid')
-    plt.plot(average_r)
+    plt.plot(average_r, label = "Average Reward training")
+    
+    x_inference = [x[0] for x in inference_performance]
+    y_inference = [x[1] for x in inference_performance]
+    plt.plot(x_inference, y_inference, label = "Average Reward inference")
+    plt.xlabel("Episodes")
+    plt.ylabel("Average Reward")
+    plt.legend(frameon = False)
     #save the iage 
     plt.savefig(path_to_save/"average_r.png")
+    plt.close()
     # cerate the same for the loss_vec 
     loss_vec = np.array(loss_vec)
     loss_vec = np.convolve(loss_vec, np.ones(100)/100, mode='valid')
     plt.plot(loss_vec)
+    plt.xlabel("Episodes")
+    plt.ylabel("Loss")
     plt.savefig(path_to_save/ "loss_vec.png")
 
 if __name__ == "__main__":
