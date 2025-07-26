@@ -1,0 +1,8 @@
+input_dim: 1
+hidden_dim: 32
+msg_dim: 1
+action_dim: 5
+max_steps: 5 #num of bits are 5-1
+number_of_agents: 2 
+netwotk_architecture: "AgentNet" # ""C_Net" # "simple_network" #"C_Net"
+batch_size: 1

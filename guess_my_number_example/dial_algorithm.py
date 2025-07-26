@@ -15,11 +15,12 @@ def apply_dial_algorithm(agent_1_record, agent_2_record, agent1, agent2, optim, 
     gradients_2 = [torch.zeros_like(param) for param in agent2.parameters()]
     gradients_agent = [gradients_1, gradients_2]
     agents = [agent1, agent2]
+    number_of_agents = len(agents)
     history_of_the_game = [agent_1_record, agent_2_record]
     T = len(agent_1_record["done"]) # This is the aount of steps in the game 
     mu_agents_downstream = [[[0.0]]*T,[[0.0]]*T]
     for t in reversed(range(T)):
-        for agent_id in range(2):
+        for agent_id in range(number_of_agents):
             agent = agents[agent_id]
             
             agent_history = history_of_the_game[agent_id]
