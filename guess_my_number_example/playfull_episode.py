@@ -9,7 +9,7 @@ import torch
 import numpy as np 
 
 from guess_my_number_example.discret_regularize_unit import dru
-def play_full_episode(env, agent1network, agent2network, hidden_dim, training = True ):
+def play_full_episode(env, agent1network, agent2network, hidden_dim, training = True, epsilon = 0.1):
     obs = env.reset()
     done = False
 
@@ -72,7 +72,7 @@ def play_full_episode(env, agent1network, agent2network, hidden_dim, training = 
   
         
         # epsilon-greedy action selection
-        if np.random.rand() < 0.1:
+        if np.random.rand() < epsilon:
             a1 = np.random.randint(0, env.action_space, 1)[0]
         else:
             a1 = torch.argmax(q1, dim=1).item()

@@ -17,6 +17,8 @@ from guess_my_number_example.dial_algorithm import apply_dial_algorithm
 from pathlib import Path  
 from typing import Dict
 from utils.load_ymal import load_yaml
+from utils.get_folder_for_experiment import get_folder_for_experiment
+
 
 def main(config: Dict):
     input_dim = config["input_dim"]
@@ -28,6 +30,11 @@ def main(config: Dict):
     netwotk_architecture = config["netwotk_architecture"] # ""C_Net" # "simple_network" #"C_Net"
     batch_size = config["batch_size"]
     checkpoint_folder = Path("checkpoints")
+    number_of_max_episodes = config["number_of_max_episodes"]
+
+    ## Cretae folder for saving the experiment 
+    path_to_save_images = get_folder_for_experiment(config)
+
 
     if os.path.isdir(checkpoint_folder) is False:
         os.makedirs(checkpoint_folder)
@@ -52,19 +59,19 @@ def main(config: Dict):
     # Share weights 
     agent2network.load_state_dict(agent1network.state_dict())
     agnet_1_target.load_state_dict(agent1network.state_dict())
-    optim = torch.optim.Adam(list(agent1network.parameters()) + list(agent2network.parameters()), lr=1e-4)#was 3
+    optim = torch.optim.Adam(list(agent1network.parameters()) + list(agent2network.parameters()), lr=config["learning_rate"])#was 3
 
     env = GuessMyNumberEnv(max_steps = max_steps, action_space = action_dim)
-    gamma = 0.9
+    gamma = config["gamma"] #0.9
     loss_vec = []
     average_r = []
     max_infernec_avege_reward = -sys.maxsize
     optim.zero_grad()
     batch_gradient_of_param = [torch.zeros_like(param) for param in agent1network.parameters()]
 
-    for episode in range(100000):
+    for episode in range(number_of_max_episodes):
 
-        agent_1_record, agent_2_record , avege_reward = play_full_episode(env, agent1network, agent2network, hidden_dim)
+        agent_1_record, agent_2_record , avege_reward = play_full_episode(env, agent1network, agent2network, hidden_dim, training=True, epsilon=config["epsilon"])
 
         average_r.append(avege_reward)
 
@@ -135,12 +142,12 @@ def main(config: Dict):
     average_r = np.convolve(average_r, np.ones(100)/100, mode='valid')
     plt.plot(average_r)
     #save the iage 
-    plt.savefig("average_r.png")
+    plt.savefig(path_to_save_images/"average_r.png")
     # cerate the same for the loss_vec 
     loss_vec = np.array(loss_vec)
     loss_vec = np.convolve(loss_vec, np.ones(100)/100, mode='valid')
     plt.plot(loss_vec)
-    plt.savefig("loss_vec.png")
+    plt.savefig(path_to_save_images/ "loss_vec.png")
 
 if __name__ == "__main__":
     path_to_config = Path("guess_my_number_example") / "config.yaml"

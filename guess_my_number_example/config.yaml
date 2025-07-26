@@ -1,8 +1,23 @@
+#Experiment configuration file for Guess My Number game
+experiment_name: "guess_my_number_actions_dims_10_netwotk_architecture_AgentNet_max_steps_5"
+
+#Environment Paramerter 
 input_dim: 1
 hidden_dim: 32
 msg_dim: 1
 action_dim: 5
 max_steps: 5 #num of bits are 5-1
 number_of_agents: 2 
+
+# Network parameters
 netwotk_architecture: "AgentNet" # ""C_Net" # "simple_network" #"C_Net"
+
+# Reinforcemnet learning parameters
+gamma: 0.9
+epsilon: 0.1 # For  epsilon  greedy algorithm 
+learning_rate: 0.0001
+
+
+# Training parameters
 batch_size: 1
+number_of_max_episodes: 10000
