@@ -1,5 +1,5 @@
 #Experiment configuration file for Guess My Number game
-experiment_name: "guess_my_number_actions_dims_10_netwotk_architecture_AgentNet_max_steps_5"
+experiment_name: "guess_my_number_actions_dims_5_netwotk_architecture_AgentNet_max_steps_5"
 
 #Environment Paramerter 
 input_dim: 1
