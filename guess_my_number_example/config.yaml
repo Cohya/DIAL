@@ -12,12 +12,13 @@ number_of_agents: 2
 # Network parameters
 netwotk_architecture: "AgentNet" # ""C_Net" # "simple_network" #"C_Net"
 
-# Reinforcemnet learning parameters
+# Reinforcemnet learning parameters (DQN)
 gamma: 0.9
 epsilon: 0.1 # For  epsilon  greedy algorithm 
 learning_rate: 0.0001
-
+update_target: 100 # Update target network every 100 episodes
 
 # Training parameters
 batch_size: 1
-number_of_max_episodes: 10000
+number_of_max_episodes: 500000
+print_interval: 1000 # Print every 1000 episodes

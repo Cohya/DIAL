@@ -29,12 +29,13 @@ def main(config: Dict):
     number_of_agents = config["number_of_agents"]
     netwotk_architecture = config["netwotk_architecture"] # ""C_Net" # "simple_network" #"C_Net"
     batch_size = config["batch_size"]
-    checkpoint_folder = Path("checkpoints")
+    
     number_of_max_episodes = config["number_of_max_episodes"]
-
+    update_target = config["update_target"] # Update target network every 100 episodes
+    print_interval = config["print_interval"] # Print every 1000 episodes
     ## Cretae folder for saving the experiment 
-    path_to_save_images = get_folder_for_experiment(config)
-
+    path_to_save = get_folder_for_experiment(config)
+    checkpoint_folder = path_to_save / "checkpoints"\
 
     if os.path.isdir(checkpoint_folder) is False:
         os.makedirs(checkpoint_folder)
@@ -101,13 +102,13 @@ def main(config: Dict):
 
         # copy weights
         agent2network.load_state_dict(agent1network.state_dict())
-        if episode % 100 == 0:
+        if episode % update_target == 0:
             agnet_1_target.load_state_dict(agent1network.state_dict())
 
-        if episode % 1000 == 0:
+        if episode % print_interval == 0:
             print("episode: ", episode, "average reward: ", np.mean(average_r[-100:]), "loss: ", np.mean(loss_vec[-100:]))
 
-        if episode % 10000 == 0:
+        if episode % number_of_max_episodes == 0:
             avege_reward_infernece = 0
             for _ in range(100):
                 agent_1_record, agent_2_record , avege_reward =  play_full_episode(env, agent1network, agent2network, hidden_dim, training=False)
@@ -117,10 +118,11 @@ def main(config: Dict):
             print("Agent 1 obs:", agent_1_record["obs"][-1], "agent_1_messages:", [int(dru(me.detach(), training=False).detach().numpy()[0][0]) for me in agent_1_record["msg_sent"]])
             print("Agent 2 obs:", agent_2_record["obs"][-1], "agent_2_messages:", [int(dru(me.detach(), training=False).detach().numpy()[0][0]) for me in agent_2_record["msg_sent"]])
             
+            
             avege_reward_infernece /= 100
             if avege_reward_infernece > max_infernec_avege_reward:
                 max_infernec_avege_reward = avege_reward_infernece
-                path_to_sv = checkpoint_folder  / f"agent1_{netwotk_architecture}_best_inference_iteration_{episode}.pth"
+                path_to_sv =  checkpoint_folder  / f"agent1_{netwotk_architecture}_best_inference_iteration_{episode}.pth"
 
                 path_to_save_agent_2 =  checkpoint_folder / f"agent2_{netwotk_architecture}_best_inference_iteration_{episode}.pth"
                 torch.save(agent1network.state_dict(),path_to_sv)
@@ -129,10 +131,10 @@ def main(config: Dict):
 
             
 
-    with open("loss_vec.pk", "wb") as file:
+    with open(path_to_save /"loss_vec.pk", "wb") as file:
         pickle.dump(loss_vec, file)
 
-    with open("average_r.pk", "wb") as file:
+    with open(path_to_save/"average_r.pk", "wb") as file:
         pickle.dump(average_r,file)
 
 
@@ -142,12 +144,12 @@ def main(config: Dict):
     average_r = np.convolve(average_r, np.ones(100)/100, mode='valid')
     plt.plot(average_r)
     #save the iage 
-    plt.savefig(path_to_save_images/"average_r.png")
+    plt.savefig(path_to_save/"average_r.png")
     # cerate the same for the loss_vec 
     loss_vec = np.array(loss_vec)
     loss_vec = np.convolve(loss_vec, np.ones(100)/100, mode='valid')
     plt.plot(loss_vec)
-    plt.savefig(path_to_save_images/ "loss_vec.png")
+    plt.savefig(path_to_save/ "loss_vec.png")
 
 if __name__ == "__main__":
     path_to_config = Path("guess_my_number_example") / "config.yaml"
